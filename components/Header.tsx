@@ -70,6 +70,7 @@ export default function Header() {
                                 </div>
                             </div>
                             <Link href="/contact" className="hover:text-primary transition-colors">Contact</Link>
+                            <Link href="/application" className="hover:text-primary transition-colors">Apply</Link>
                         </nav>
 
                         {/* Desktop Actions */}
@@ -77,9 +78,11 @@ export default function Header() {
                             <Button variant="primary" size="sm" className="rounded-full px-4 flex items-center gap-2">
                                 <FaSearch /> Biometrics
                             </Button>
-                            <Button variant="primary" size="sm" className="rounded-full px-4">
-                                Apply Now
-                            </Button>
+                            <Link href="/application">
+                                <Button variant="primary" size="sm" className="rounded-full px-4">
+                                    Apply Now
+                                </Button>
+                            </Link>
                         </div>
 
                         {/* Mobile Toggle */}
