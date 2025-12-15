@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { FiChevronLeft, FiChevronRight, FiX } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 
 export default function ApplicationDetails() {
     const params = useParams();
@@ -29,40 +30,149 @@ export default function ApplicationDetails() {
         }
     }, [id]);
 
-    const updateStatus = async (status: string) => {
-        if (!confirm(`Are you sure you want to mark this as ${status}?`)) return;
 
-        try {
-            const res = await fetch(`/api/application/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                setApplication(data.data);
-                alert('Status updated successfully');
+    // Reusable Confirmation Toast Component
+    const ConfirmationToast = ({
+        message,
+        subMessage,
+        onConfirm,
+        confirmText = "Confirm",
+        confirmColor = "bg-blue-600 hover:bg-blue-700",
+        t
+    }: {
+        message: React.ReactNode,
+        subMessage?: React.ReactNode,
+        onConfirm: () => Promise<void>,
+        confirmText?: string,
+        confirmColor?: string,
+        t: any
+    }) => {
+        const [loading, setLoading] = useState(false);
+
+        const handleConfirm = async () => {
+            setLoading(true);
+            try {
+                await onConfirm();
+                toast.dismiss(t.id);
+            } catch (error) {
+                setLoading(false);
+                // Error handling is done inside onConfirm typically via toast.error, 
+                // but we can also handle it here if needed.
             }
-        } catch (err) {
-            alert('Failed to update status');
-        }
+        };
+
+        return (
+            <div className="flex flex-col gap-3 min-w-[350px] bg-white p-2">
+                <p className="font-medium text-gray-800 text-center text-lg">
+                    {message}
+                    {subMessage && (
+                        <>
+                            <br />
+                            <span className="text-base text-red-500 font-normal mt-1 block">
+                                {subMessage}
+                            </span>
+                        </>
+                    )}
+                </p>
+                <div className="flex justify-center gap-4 mt-2">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg border border-gray-300 transition-colors"
+                        disabled={loading}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleConfirm}
+                        className={`px-4 py-2 text-sm font-medium text-white rounded-lg shadow-md transition-colors flex items-center gap-2 ${confirmColor} ${loading ? 'opacity-75 cursor-not-allowed' : ''}`}
+                        disabled={loading}
+                    >
+                        {loading && (
+                            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        )}
+                        {loading ? 'Processing...' : confirmText}
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+    const updateStatus = async (status: string) => {
+        toast((t) => (
+            <ConfirmationToast
+                t={t}
+                message={<span>Are you sure you want to mark this as <span className="font-bold">{status}</span>?</span>}
+                onConfirm={async () => {
+                    try {
+                        const res = await fetch(`/api/application/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status }),
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            setApplication(data.data);
+                            toast.success('Status updated successfully');
+                        } else {
+                            toast.error('Failed to update status');
+                        }
+                    } catch (err) {
+                        toast.error('Failed to update status');
+                    }
+                }}
+            />
+        ), {
+            duration: Infinity,
+            position: 'top-center',
+            style: {
+                minWidth: '350px',
+                borderRadius: '12px',
+                boxShadow: '0 10px 30px -10px rgba(0,0,0,0.3)',
+                padding: '20px',
+                border: '1px solid #e2e8f0'
+            }
+        });
     };
 
     const deleteApplication = async () => {
-        if (!confirm('Are you sure you want to delete this application? This cannot be undone.')) return;
-
-        try {
-            const res = await fetch(`/api/application/${id}`, {
-                method: 'DELETE',
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert('Application deleted');
-                router.push('/admin/applications');
+        toast((t) => (
+            <ConfirmationToast
+                t={t}
+                message="Are you sure you want to delete this application?"
+                subMessage="This action cannot be undone."
+                confirmText="Delete"
+                confirmColor="bg-red-600 hover:bg-red-700"
+                onConfirm={async () => {
+                    try {
+                        const res = await fetch(`/api/application/${id}`, {
+                            method: 'DELETE',
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            toast.success('Application deleted');
+                            router.push('/admin/applications');
+                        } else {
+                            toast.error('Failed to delete');
+                        }
+                    } catch (err) {
+                        toast.error('Failed to delete');
+                    }
+                }}
+            />
+        ), {
+            duration: Infinity,
+            position: 'top-center',
+            style: {
+                minWidth: '350px',
+                borderRadius: '12px',
+                boxShadow: '0 10px 30px -10px rgba(0,0,0,0.3)',
+                padding: '20px',
+                border: '1px solid #e2e8f0'
             }
-        } catch (err) {
-            alert('Failed to delete');
-        }
+        });
     };
 
     // Flatten all images into a single array for navigation

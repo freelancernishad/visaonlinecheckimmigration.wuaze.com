@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ReactNode, useState } from 'react';
 import { FiMenu, FiX, FiGrid, FiList, FiLogOut, FiLayout, FiSettings } from 'react-icons/fi';
+import { Toaster } from 'react-hot-toast';
 
 // This layout only applies to routes inside (dashboard) group
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -102,6 +103,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-8 bg-gray-100 w-full">
+                <Toaster position="top-right" />
                 {children}
             </main>
         </div>
