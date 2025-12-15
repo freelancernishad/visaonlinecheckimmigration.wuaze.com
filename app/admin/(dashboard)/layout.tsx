@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ReactNode, useState } from 'react';
-import { FiMenu, FiX, FiGrid, FiList, FiLogOut, FiLayout } from 'react-icons/fi';
+import { FiMenu, FiX, FiGrid, FiList, FiLogOut, FiLayout, FiSettings } from 'react-icons/fi';
 
 // This layout only applies to routes inside (dashboard) group
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -68,6 +68,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     >
                         <FiList className="mr-3 h-5 w-5 group-hover:text-amber-400 transition-colors" />
                         Applications
+                    </Link>
+                    <Link
+                        href="/admin/settings"
+                        className="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-slate-700 hover:text-white transition-colors group"
+                        onClick={() => setSidebarOpen(false)}
+                    >
+                        <FiSettings className="mr-3 h-5 w-5 group-hover:text-cyan-400 transition-colors" />
+                        Settings
                     </Link>
                 </nav>
                 <div className="p-4 bg-slate-900 border-t border-slate-700">

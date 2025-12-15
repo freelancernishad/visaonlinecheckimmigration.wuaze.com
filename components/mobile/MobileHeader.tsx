@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import Button from "../Button";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export default function MobileHeader() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { settings } = useSiteSettings();
 
     return (
         <div className="lg:hidden">
@@ -15,7 +17,7 @@ export default function MobileHeader() {
                 <div className="flex justify-between items-center h-20">
                     {/* Brand */}
                     <Link href="/" className="text-3xl font-bold text-primary flex items-center gap-2">
-                        E-VISA
+                        {settings?.siteTitle || 'E-VISA'}
                     </Link>
 
                     {/* Mobile Toggle */}
@@ -34,7 +36,7 @@ export default function MobileHeader() {
                     {/* Drawer Header */}
                     <div className="flex justify-between items-center p-5 border-b border-gray-200 bg-white w-full sticky top-0 z-10">
                         <Link href="/" onClick={() => setIsMenuOpen(false)} className="text-2xl font-bold text-[#0F5E9C] flex items-center gap-2">
-                            E-VISA
+                            {settings?.siteTitle || 'E-VISA'}
                         </Link>
                         <button
                             onClick={() => setIsMenuOpen(false)}

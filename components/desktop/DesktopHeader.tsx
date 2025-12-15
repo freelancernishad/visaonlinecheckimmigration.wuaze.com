@@ -4,7 +4,11 @@ import Link from "next/link";
 import { FaEnvelope, FaPhoneAlt, FaTwitter, FaFacebookF, FaLinkedinIn, FaInstagram, FaYoutube, FaSearch, FaBars, FaTimes } from "react-icons/fa";
 import Button from "../Button";
 
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+
 export default function DesktopHeader() {
+    const { settings } = useSiteSettings();
+
     return (
         <div className="hidden lg:block">
             {/* Topbar */}
@@ -14,21 +18,31 @@ export default function DesktopHeader() {
                         <div className="flex items-center gap-6 text-sm">
                             <div className="flex items-center gap-2">
                                 <FaEnvelope className="text-gray-300" />
-                                <span>Example@gmail.com</span>
+                                <span>{settings?.email || 'Example@gmail.com'}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <FaPhoneAlt className="text-gray-300" />
-                                <span>+01234567890</span>
+                                <span>{settings?.phone || '+01234567890'}</span>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-4">
                             <div className="flex gap-2">
-                                <a href="#" className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white hover:text-primary transition-colors"><FaTwitter size={12} /></a>
-                                <a href="#" className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white hover:text-primary transition-colors"><FaFacebookF size={12} /></a>
-                                <a href="#" className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white hover:text-primary transition-colors"><FaLinkedinIn size={12} /></a>
-                                <a href="#" className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white hover:text-primary transition-colors"><FaInstagram size={12} /></a>
-                                <a href="#" className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white hover:text-primary transition-colors"><FaYoutube size={12} /></a>
+                                {settings?.socialLinks?.twitter && (
+                                    <a href={settings.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white hover:text-primary transition-colors"><FaTwitter size={12} /></a>
+                                )}
+                                {settings?.socialLinks?.facebook && (
+                                    <a href={settings.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white hover:text-primary transition-colors"><FaFacebookF size={12} /></a>
+                                )}
+                                {settings?.socialLinks?.linkedin && (
+                                    <a href={settings.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white hover:text-primary transition-colors"><FaLinkedinIn size={12} /></a>
+                                )}
+                                {settings?.socialLinks?.instagram && (
+                                    <a href={settings.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white hover:text-primary transition-colors"><FaInstagram size={12} /></a>
+                                )}
+                                {settings?.socialLinks?.youtube && (
+                                    <a href={settings.socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white hover:text-primary transition-colors"><FaYoutube size={12} /></a>
+                                )}
                             </div>
                             <div className="h-4 w-px bg-white/30 mx-2"></div>
                             <div className="flex gap-3 text-sm text-gray-200">
