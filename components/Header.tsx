@@ -75,9 +75,8 @@ export default function Header() {
 
                         {/* Desktop Actions */}
                         <div className="hidden lg:flex items-center gap-3">
-                            <Button variant="primary" size="sm" className="rounded-full px-4 flex items-center gap-2">
-                                <FaSearch /> Biometrics
-                            </Button>
+                            <Link href="/addfingerprint"><Button variant="primary" size="sm" className="rounded-full px-4 flex items-center gap-2"><FaSearch /> Biometrics</Button></Link>
+                            <Link href="/check-visa"><Button variant="primary" size="sm" className="rounded-full px-4 flex items-center gap-2"><FaSearch /> Check Visa</Button></Link>
                             <Link href="/application">
                                 <Button variant="primary" size="sm" className="rounded-full px-4">
                                     Apply Now
