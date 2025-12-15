@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { FaBars, FaTimes } from "react-icons/fa";
+import { FaBars, FaTimes, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import Button from "../Button";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export default function MobileHeader() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isOtherOpen, setIsOtherOpen] = useState(false);
     const { settings } = useSiteSettings();
 
     return (
@@ -54,24 +55,38 @@ export default function MobileHeader() {
                         <Link href="/service" onClick={() => setIsMenuOpen(false)} className="hover:text-[#0F5E9C] transition-colors border-b border-gray-100 pb-2">Service</Link>
 
                         {/* Mobile Other Dropdown Items */}
-                        <div className="flex flex-col gap-3 pl-4 border-l-2 border-[#0F5E9C]/20">
-                            <span className="text-gray-400 text-sm uppercase tracking-wider font-bold mb-1">More</span>
-                            <Link href="/feature" onClick={() => setIsMenuOpen(false)} className="text-gray-600 hover:text-[#0F5E9C] transition-colors">Feature</Link>
-                            <Link href="/countries" onClick={() => setIsMenuOpen(false)} className="text-gray-600 hover:text-[#0F5E9C] transition-colors">Countries</Link>
-                            <Link href="/testimonial" onClick={() => setIsMenuOpen(false)} className="text-gray-600 hover:text-[#0F5E9C] transition-colors">Testimonial</Link>
-                            <Link href="/training" onClick={() => setIsMenuOpen(false)} className="text-gray-600 hover:text-[#0F5E9C] transition-colors">Training</Link>
+                        <div className="flex flex-col border-l-2 border-[#0F5E9C]/20 pl-4">
+                            <button
+                                onClick={() => setIsOtherOpen(!isOtherOpen)}
+                                className="flex items-center justify-between w-full text-left text-[#212529] hover:text-[#0F5E9C] transition-colors py-2"
+                            >
+                                <span className="font-medium">Other</span>
+                                {isOtherOpen ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+                            </button>
+
+                            {/* Submenu */}
+                            <div className={`flex flex-col gap-3 mt-2 overflow-hidden transition-all duration-300 ${isOtherOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                <Link href="/feature" onClick={() => setIsMenuOpen(false)} className="text-gray-600 hover:text-[#0F5E9C] transition-colors pl-2">Feature</Link>
+                                <Link href="/countries" onClick={() => setIsMenuOpen(false)} className="text-gray-600 hover:text-[#0F5E9C] transition-colors pl-2">Countries</Link>
+                                <Link href="/testimonial" onClick={() => setIsMenuOpen(false)} className="text-gray-600 hover:text-[#0F5E9C] transition-colors pl-2">Testimonial</Link>
+                                <Link href="/training" onClick={() => setIsMenuOpen(false)} className="text-gray-600 hover:text-[#0F5E9C] transition-colors pl-2">Training</Link>
+                            </div>
                         </div>
 
-                        <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="hover:text-[#0F5E9C] transition-colors border-b border-gray-100 pb-2">Contact</Link>
-                    </div>
 
-                    <div className="mt-auto p-6 flex flex-col gap-4">
-                        <Link href="/check-visa" onClick={() => setIsMenuOpen(false)} className="w-full">
-                            <Button className="w-full justify-center py-4 bg-[#0A3D66] text-white">Check Visa Status</Button>
-                        </Link>
-                        <Link href="/application" onClick={() => setIsMenuOpen(false)} className="w-full">
-                            <Button variant="outline" className="w-full justify-center py-4 border-2 border-[#0F5E9C] text-[#0F5E9C]">Apply Now</Button>
-                        </Link>
+                        <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="hover:text-[#0F5E9C] transition-colors border-b border-gray-100 pb-2">Contact</Link>
+
+                        <div className="flex flex-wrap gap-3 mt-4">
+                            <Link href="/addfingerprint" onClick={() => setIsMenuOpen(false)} className="flex-1 min-w-[140px]">
+                                <Button variant="primary" className="w-full justify-center py-3 bg-[#0A3D66] text-sm">Biometrics</Button>
+                            </Link>
+                            <Link href="/check-visa" onClick={() => setIsMenuOpen(false)} className="flex-1 min-w-[140px]">
+                                <Button variant="primary" className="w-full justify-center py-3 bg-[#0A3D66] text-sm">Check Visa</Button>
+                            </Link>
+                            <Link href="/application" onClick={() => setIsMenuOpen(false)} className="w-full">
+                                <Button variant="outline" className="w-full justify-center py-3 border-2 border-[#0F5E9C] text-[#0F5E9C] text-sm">Apply Now</Button>
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

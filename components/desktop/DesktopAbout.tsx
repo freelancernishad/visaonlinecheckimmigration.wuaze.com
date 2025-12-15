@@ -1,8 +1,20 @@
+"use client";
+
 import Image from 'next/image';
 import { FaMapMarkedAlt, FaPassport, FaTicketAlt, FaCheckCircle, FaPhoneAlt, FaCommentDots, FaUserFriends, FaGlobeAmericas, FaAward } from 'react-icons/fa';
 import Button from '../Button';
 
+import { useHomePage } from '@/hooks/useHomePage';
+
 export default function DesktopAbout() {
+    const { data, loading } = useHomePage();
+
+    if (loading || !data?.about) {
+        return <div className="hidden lg:block py-24 bg-white animate-pulse"><div className="container mx-auto h-96 bg-gray-100 rounded-3xl"></div></div>;
+    }
+
+    const { about } = data;
+
     return (
         <section className="hidden lg:block py-24 bg-white overflow-hidden relative">
             <div className="absolute top-0 right-0 w-1/3 h-full bg-gray-50 -z-10 rounded-l-[100px]"></div>
@@ -13,7 +25,7 @@ export default function DesktopAbout() {
                     <div className="w-1/2 relative">
                         <div className="relative z-10">
                             <Image
-                                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=800&auto=format&fit=crop"
+                                src={about.images.main}
                                 alt="Main About"
                                 width={500}
                                 height={600}
@@ -25,8 +37,8 @@ export default function DesktopAbout() {
                                     <FaUserFriends size={32} />
                                 </div>
                                 <div>
-                                    <h4 className="text-3xl font-bold text-dark">10k+</h4>
-                                    <p className="text-sm text-gray-500 font-medium">Happy Clients</p>
+                                    <h4 className="text-3xl font-bold text-dark">{about.stats.value}</h4>
+                                    <p className="text-sm text-gray-500 font-medium">{about.stats.label}</p>
                                 </div>
                             </div>
                         </div>
@@ -34,7 +46,7 @@ export default function DesktopAbout() {
                         {/* Secondary Image */}
                         <div className="absolute -top-12 right-12 -z-10">
                             <Image
-                                src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=600&auto=format&fit=crop"
+                                src={about.images.secondary}
                                 alt="Secondary About"
                                 width={350}
                                 height={450}
@@ -50,47 +62,40 @@ export default function DesktopAbout() {
                     <div className="w-1/2">
                         <div className="mb-2 flex items-center gap-2">
                             <span className="w-10 h-[2px] bg-primary"></span>
-                            <span className="text-primary font-bold uppercase tracking-widest text-sm">About Our Company</span>
+                            <span className="text-primary font-bold uppercase tracking-widest text-sm">{about.subtitle}</span>
                         </div>
 
-                        <h1 className="text-5xl font-extrabold text-dark mb-6 leading-tight">
-                            Providing The Best <br />
-                            <span className="text-primary">Immigration</span> Services.
+                        <h1 className="text-5xl font-extrabold text-dark mb-6 leading-tight whitespace-pre-line">
+                            {about.title}
                         </h1>
 
                         <p className="text-gray-500 mb-8 leading-relaxed text-lg max-w-xl">
-                            We have been counseling students for educational opportunities in Foreign countries and helping them realize their dream of studying abroad.
+                            {about.description}
                         </p>
 
                         <div className="grid grid-cols-2 gap-6 mb-10">
-                            <div className="flex items-start gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors duration-300">
-                                <div className="mt-1 bg-white p-2 rounded-lg shadow-sm text-primary border border-gray-100">
-                                    <FaAward size={24} />
+                            {about.features.map((feature: any, index: number) => (
+                                <div key={index} className="flex items-start gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors duration-300">
+                                    <div className="mt-1 bg-white p-2 rounded-lg shadow-sm text-primary border border-gray-100">
+                                        <FaAward size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-lg text-dark mb-1">{feature.title}</h4>
+                                        <p className="text-sm text-gray-500">{feature.description}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-lg text-dark mb-1">Certified Experts</h4>
-                                    <p className="text-sm text-gray-500">Our team consists of certified immigration consultants.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors duration-300">
-                                <div className="mt-1 bg-white p-2 rounded-lg shadow-sm text-primary border border-gray-100">
-                                    <FaGlobeAmericas size={24} />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-lg text-dark mb-1">Global Reach</h4>
-                                    <p className="text-sm text-gray-500">We assist with visa applications for over 50 countries.</p>
-                                </div>
-                            </div>
+                            ))}
                         </div>
 
                         <div className="bg-primary/5 rounded-2xl p-8 border border-primary/10 relative overflow-hidden">
                             <div className="relative z-10 flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-2xl font-bold text-dark mb-2">34+ Years Experience</h3>
-                                    <p className="text-gray-600 mb-4">We have a proven track record of success.</p>
+                                    <h3 className="text-2xl font-bold text-dark mb-2">{about.experience.years} Experience</h3>
+                                    <p className="text-gray-600 mb-4">{about.experience.text}</p>
                                     <ul className="space-y-2">
-                                        <li className="flex items-center gap-2 font-medium text-dark"><FaCheckCircle className="text-primary" /> 98% Visa Approval Rate</li>
-                                        <li className="flex items-center gap-2 font-medium text-dark"><FaCheckCircle className="text-primary" /> Initial Consultation Free</li>
+                                        {about.experience.points.map((point: string, i: number) => (
+                                            <li key={i} className="flex items-center gap-2 font-medium text-dark"><FaCheckCircle className="text-primary" /> {point}</li>
+                                        ))}
                                     </ul>
                                 </div>
                                 <div>

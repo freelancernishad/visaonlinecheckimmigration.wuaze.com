@@ -4,25 +4,27 @@ import Image from 'next/image';
 import { FaStar } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay } from 'swiper/modules';
+import { useHomePage } from '@/hooks/useHomePage';
 
 import 'swiper/css';
 
-const testimonials = [
-    { name: "John Doe", profession: "Business Traveler", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },
-    { name: "Sarah Smith", profession: "Student", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },
-    { name: "Michael Brown", profession: "Tourist", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },
-    { name: "Emily Davis", profession: "Migrant Worker", image: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?q=80&w=200&auto=format&fit=crop", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },
-];
-
 export default function DesktopTestimonials() {
+    const { data, loading } = useHomePage();
+
+    if (loading || !data?.testimonials) {
+        return <div className="hidden lg:block py-20 bg-white animate-pulse"><div className="container mx-auto h-96 bg-gray-100 rounded-3xl"></div></div>;
+    }
+
+    const { testimonials } = data;
+
     return (
         <section className="hidden lg:block py-20 bg-white">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-16">
-                    <h4 className="text-primary font-bold uppercase mb-2">Our Clients Reviews</h4>
-                    <h1 className="text-5xl font-bold text-dark mb-4">What Our Clients Say</h1>
+                    <h4 className="text-primary font-bold uppercase mb-2">{testimonials.subtitle}</h4>
+                    <h1 className="text-5xl font-bold text-dark mb-4">{testimonials.title}</h1>
                     <p className="text-gray-500 max-w-3xl mx-auto">
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Quaerat deleniti amet at atque sequi quibusdam cumque itaque repudiandae temporibus.
+                        {testimonials.description}
                     </p>
                 </div>
 
@@ -34,7 +36,7 @@ export default function DesktopTestimonials() {
                     loop={true}
                     className="pb-16"
                 >
-                    {testimonials.map((item, index) => (
+                    {testimonials.items.map((item: any, index: number) => (
                         <SwiperSlide key={index}>
                             <div className="bg-white px-2">
                                 {/* Comment Box */}

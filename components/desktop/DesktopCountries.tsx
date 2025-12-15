@@ -1,26 +1,30 @@
-import Image from 'next/image';
+"use client";
 
-const countries = [
-    { name: "Brazil", flag: "https://flagcdn.com/w160/br.png", image: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=600&auto=format&fit=crop" },
-    { name: "India", flag: "https://flagcdn.com/w160/in.png", image: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=600&auto=format&fit=crop" },
-    { name: "New York", flag: "https://flagcdn.com/w160/us.png", image: "https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?q=80&w=600&auto=format&fit=crop" },
-    { name: "Italy", flag: "https://flagcdn.com/w160/it.png", image: "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=600&auto=format&fit=crop" },
-];
+import Image from 'next/image';
+import { useHomePage } from '@/hooks/useHomePage';
 
 export default function DesktopCountries() {
+    const { data, loading } = useHomePage();
+
+    if (loading || !data?.countries) {
+        return <div className="hidden lg:block py-20 bg-white animate-pulse"><div className="container mx-auto h-96 bg-gray-100 rounded-3xl"></div></div>;
+    }
+
+    const { countries } = data;
+
     return (
         <section className="hidden lg:block py-20 bg-white">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-16">
-                    <h4 className="text-primary font-bold uppercase mb-2 text-base">Countries We Offer</h4>
-                    <h1 className="text-5xl font-bold text-dark mb-4">Immigration & visa services following Countries</h1>
+                    <h4 className="text-primary font-bold uppercase mb-2 text-base">{countries.subtitle}</h4>
+                    <h1 className="text-5xl font-bold text-dark mb-4">{countries.title}</h1>
                     <p className="text-gray-500 max-w-3xl mx-auto text-base">
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Quaerat deleniti amet at atque sequi quibusdam cumque itaque repudiandae temporibus.
+                        {countries.description}
                     </p>
                 </div>
 
                 <div className="grid grid-cols-4 gap-8">
-                    {countries.map((country, index) => (
+                    {countries.items.map((country: any, index: number) => (
                         <div key={index} className="relative group mb-8 rounded-xl bg-white shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden hover:-translate-y-2">
                             <div className="h-64 relative overflow-hidden">
                                 <Image

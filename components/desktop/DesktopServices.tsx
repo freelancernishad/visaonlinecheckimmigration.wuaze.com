@@ -1,29 +1,31 @@
+"use client";
+
 import Link from 'next/link';
 import Image from 'next/image';
-
-const services = [
-    { title: "Job Visa", image: "https://images.unsplash.com/photo-1586769852044-692d6e3703f0?q=80&w=800&auto=format&fit=crop" },
-    { title: "Business Visa", image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=800&auto=format&fit=crop" },
-    { title: "Diplometic Visa", image: "https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?q=80&w=800&auto=format&fit=crop" },
-    { title: "Students Visa", image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=800&auto=format&fit=crop" },
-    { title: "Residence Visa", image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800&auto=format&fit=crop" },
-    { title: "Tourist Visa", image: "https://images.unsplash.com/photo-1500835556837-99ac94a94552?q=80&w=800&auto=format&fit=crop" },
-];
+import { useHomePage } from '@/hooks/useHomePage';
 
 export default function DesktopServices() {
+    const { data, loading } = useHomePage();
+
+    if (loading || !data?.services) {
+        return <div className="hidden lg:block py-20 bg-gray-50 animate-pulse"><div className="container mx-auto h-96 bg-gray-200 rounded-3xl"></div></div>;
+    }
+
+    const { services } = data;
+
     return (
         <section className="hidden lg:block py-20 bg-gray-50">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-16">
-                    <h4 className="text-primary font-bold uppercase mb-2 tracking-widest text-base">Our Services</h4>
-                    <h1 className="text-5xl font-bold text-dark mb-4">Enabling Your Immigration <br /> Successfully</h1>
+                    <h4 className="text-primary font-bold uppercase mb-2 tracking-widest text-base">{services.subtitle}</h4>
+                    <h1 className="text-5xl font-bold text-dark mb-4 whitespace-pre-line">{services.title}</h1>
                     <p className="text-gray-500 max-w-2xl mx-auto">
-                        We provide comprehensive solutions for all your visa and immigration requirements.
+                        {services.description}
                     </p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-8">
-                    {services.map((service, index) => (
+                    {services.items.map((service: any, index: number) => (
                         <div key={index} className="group rounded-2xl overflow-hidden relative shadow-lg bg-white hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
                             {/* Image Container */}
                             <div className="relative h-64 overflow-hidden">
@@ -47,7 +49,7 @@ export default function DesktopServices() {
                             <div className="pt-12 p-8 relative">
                                 <h3 className="text-2xl font-bold text-dark mb-3 group-hover:text-primary transition-colors">{service.title}</h3>
                                 <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-                                    Professional assistance for your {service.title.toLowerCase()} application process with high success rates.
+                                    {service.description}
                                 </p>
 
                                 <div className="flex items-center justify-between border-t border-gray-100 pt-6">

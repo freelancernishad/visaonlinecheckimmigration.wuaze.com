@@ -34,8 +34,17 @@ const slides = [
     }
 ];
 
+import { useHomePage } from '@/hooks/useHomePage';
+
 export default function DesktopHero() {
     const [activeIndex, setActiveIndex] = useState(0);
+    const { data, loading } = useHomePage();
+
+    if (loading || !data?.hero?.slides) {
+        return <div className="hidden lg:block h-[850px] bg-gray-100 animate-pulse"></div>;
+    }
+
+    const slides = data.hero.slides;
 
     return (
         <section className="hidden lg:block relative h-[850px] group">
@@ -56,7 +65,7 @@ export default function DesktopHero() {
                 className="h-full w-full"
                 onSlideChange={(swiper) => setActiveIndex(swiper.realIndex)}
             >
-                {slides.map((slide, index) => (
+                {slides.map((slide: any, index: number) => (
                     <SwiperSlide key={index} className="relative h-full flex items-center overflow-hidden">
                         {/* Background Image with Ken Burns Effect */}
                         <div className="absolute inset-0 z-0">
