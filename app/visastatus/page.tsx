@@ -1,12 +1,20 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export default function VisaStatus() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#f8f9fa]">Loading...</div>}>
+            <VisaStatusContent />
+        </Suspense>
+    );
+}
+
+function VisaStatusContent() {
     const searchParams = useSearchParams();
     const passport = searchParams.get("passport") || "N/A";
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -130,8 +138,6 @@ export default function VisaStatus() {
             <audio ref={audioRef} src="/audio/voice.mp3" />
 
             <Header />
-
-            {/* Main Content */}
 
             {/* Main Content */}
             <div className="container mx-auto px-4 my-8 max-w-6xl">
