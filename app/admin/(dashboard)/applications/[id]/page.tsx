@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { FiChevronLeft, FiChevronRight, FiX } from 'react-icons/fi';
 
 export default function ApplicationDetails() {
     const params = useParams();
@@ -10,6 +11,9 @@ export default function ApplicationDetails() {
     const [application, setApplication] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+
+    // Lightbox State
+    const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
     useEffect(() => {
         if (id) {
@@ -61,11 +65,111 @@ export default function ApplicationDetails() {
         }
     };
 
-    if (loading) return <div>Loading...</div>;
+    // Flatten all images into a single array for navigation
+    const allImages = useMemo(() => {
+        if (!application) return [];
+        const images = [];
+        if (application.photo) images.push({ src: application.photo, type: 'Passport Photo' });
+        if (application.documents && application.documents.length > 0) {
+            application.documents.forEach((doc: string, idx: number) => {
+                images.push({ src: doc, type: `Document ${idx + 1}` });
+            });
+        }
+        return images;
+    }, [application]);
+
+    const handleNext = useCallback((e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (selectedImageIndex === null) return;
+        setSelectedImageIndex((prev) => (prev! + 1) % allImages.length);
+    }, [selectedImageIndex, allImages.length]);
+
+    const handlePrev = useCallback((e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (selectedImageIndex === null) return;
+        setSelectedImageIndex((prev) => (prev! - 1 + allImages.length) % allImages.length);
+    }, [selectedImageIndex, allImages.length]);
+
+    // Keyboard navigation
+    useEffect(() => {
+        if (selectedImageIndex === null) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowRight') handleNext();
+            if (e.key === 'ArrowLeft') handlePrev();
+            if (e.key === 'Escape') setSelectedImageIndex(null);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedImageIndex, handleNext, handlePrev]);
+
+
+    if (loading) {
+        return (
+            <div className="flex h-[80vh] items-center justify-center">
+                <svg className="animate-spin h-12 w-12 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        );
+    }
     if (!application) return <div>Application not found</div>;
+
+    const currentImage = selectedImageIndex !== null ? allImages[selectedImageIndex] : null;
 
     return (
         <div>
+            {/* Navigable Lightbox Modal */}
+            {currentImage && (
+                <div
+                    className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-95 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+                    onClick={() => setSelectedImageIndex(null)}
+                >
+                    <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
+
+                        {/* Wrapper for content to catch clicks and prevent closing */}
+                        <div className="relative max-h-screen w-full flex flex-col items-center justify-center pointer-events-auto" onClick={e => e.stopPropagation()}>
+
+                            {/* Close Button */}
+                            <button
+                                className="absolute top-4 right-4 text-white/70 hover:text-white z-50 p-2 rounded-full hover:bg-white/10 transition"
+                                onClick={() => setSelectedImageIndex(null)}
+                            >
+                                <FiX className="h-8 w-8" />
+                            </button>
+
+                            {/* Main Image */}
+                            <img
+                                src={currentImage.src}
+                                alt="Full screen"
+                                className="max-h-[85vh] max-w-full object-contain shadow-2xl rounded-lg"
+                            />
+                            <p className="text-gray-400 mt-4 font-medium text-lg px-4 py-2 bg-black/50 rounded-full">
+                                {currentImage.type} <span className="text-gray-600 text-sm ml-2">({selectedImageIndex! + 1} / {allImages.length})</span>
+                            </p>
+
+                            {/* Prev Button */}
+                            <button
+                                className="absolute left-2 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition backdrop-blur-sm group"
+                                onClick={handlePrev}
+                            >
+                                <FiChevronLeft className="h-8 w-8 group-hover:-translate-x-1 transition-transform" />
+                            </button>
+
+                            {/* Next Button */}
+                            <button
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition backdrop-blur-sm group"
+                                onClick={handleNext}
+                            >
+                                <FiChevronRight className="h-8 w-8 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800">Application Details</h1>
                 <Link href="/admin/applications" className="text-blue-600 hover:underline">
@@ -168,27 +272,56 @@ export default function ApplicationDetails() {
                 </div>
 
                 <div className="mt-8">
-                    <h3 className="text-lg font-semibold border-b pb-2 mb-4">Documents</h3>
+                    <h3 className="text-lg font-semibold border-b pb-2 mb-4">Documents Gallery</h3>
 
                     <div className="mb-6">
-                        <h4 className="font-medium text-gray-700 mb-2">Passport Photo</h4>
+                        <h4 className="font-medium text-gray-700 mb-2">Passport</h4>
                         {application.photo ? (
-                            <img src={application.photo} alt="Passport" className="max-w-xs border rounded shadow-sm" />
+                            <div
+                                className="inline-block border-4 border-white shadow-lg rounded-xl overflow-hidden cursor-pointer transform hover:scale-105 transition-transform duration-300 bg-gray-50"
+                                onClick={() => {
+                                    // Find index of passport photo
+                                    const idx = allImages.findIndex(img => img.src === application.photo);
+                                    if (idx !== -1) setSelectedImageIndex(idx);
+                                }}
+                            >
+                                <img src={application.photo} alt="Passport" className="max-w-xs h-auto block" />
+                            </div>
                         ) : (
-                            <p className="text-gray-500">No photo uploaded.</p>
+                            <p className="text-gray-500 italic">No passport photo uploaded.</p>
                         )}
                     </div>
 
                     <div>
-                        <h4 className="font-medium text-gray-700 mb-2">Attached Documents</h4>
+                        <h4 className="font-medium text-gray-700 mb-4">Supporting Documents</h4>
                         {application.documents && application.documents.length > 0 ? (
-                            <div className="flex flex-wrap gap-4">
+                            <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4 mx-auto">
                                 {application.documents.map((doc: string, idx: number) => (
-                                    <img key={idx} src={doc} alt={`Document ${idx}`} className="max-w-xs border rounded shadow-sm" />
+                                    <div
+                                        key={idx}
+                                        className="break-inside-avoid relative group rounded-xl overflow-hidden border border-gray-100 shadow-md cursor-zoom-in bg-white"
+                                        onClick={() => {
+                                            // Find index of this document
+                                            // Note: using findIndex is safer than assuming offsets because the array order is static but safe
+                                            const globalIdx = allImages.findIndex(img => img.src === doc);
+                                            if (globalIdx !== -1) setSelectedImageIndex(globalIdx);
+                                        }}
+                                    >
+                                        <img
+                                            src={doc}
+                                            alt={`Document ${idx}`}
+                                            className="w-full h-auto block transform group-hover:scale-110 transition-transform duration-500 ease-out"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+                                            <span className="text-white text-xs font-medium px-2 py-1 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+                                                View Fullscreen
+                                            </span>
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-gray-500">No documents uploaded.</p>
+                            <p className="text-gray-500 italic">No supporting documents uploaded.</p>
                         )}
                     </div>
                 </div>
