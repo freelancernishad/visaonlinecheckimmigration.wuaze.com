@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ApplicationsList from '../applications/page';
+import { FiFileText, FiClock, FiCheckCircle } from 'react-icons/fi';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
@@ -42,20 +43,65 @@ export default function AdminDashboard() {
 
     return (
         <div>
-            <h1 className="text-3xl font-bold mb-8 text-gray-800">Dashboard</h1>
+
+
+            <h1 className="text-3xl font-bold mb-2 text-gray-800">Dashboard</h1>
+            <p className="text-gray-500 mb-8">Welcome back, here is an overview of your applications.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
-                    <h3 className="text-gray-500 text-sm font-medium uppercase">Total Applications</h3>
-                    <p className="text-3xl font-bold text-gray-800 mt-2">{stats.total}</p>
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-xl shadow-lg text-white relative overflow-hidden">
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h3 className="text-blue-100 text-sm font-medium uppercase tracking-wider">Total Applications</h3>
+                                <p className="text-4xl font-bold mt-2">{stats.total}</p>
+                            </div>
+                            <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+                                <FiFileText className="h-6 w-6 text-white" />
+                            </div>
+                        </div>
+                        <div className="mt-4 text-blue-100 text-xs flex items-center">
+                            All time submissions
+                        </div>
+                    </div>
+                    {/* Decorative Background Icon */}
+                    <FiFileText className="absolute -bottom-4 -right-4 h-32 w-32 text-white opacity-10 transform rotate-12" />
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
-                    <h3 className="text-gray-500 text-sm font-medium uppercase">Pending Review</h3>
-                    <p className="text-3xl font-bold text-gray-800 mt-2">{stats.pending}</p>
+
+                <div className="bg-gradient-to-br from-yellow-500 to-amber-600 p-6 rounded-xl shadow-lg text-white relative overflow-hidden">
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h3 className="text-yellow-100 text-sm font-medium uppercase tracking-wider">Pending Review</h3>
+                                <p className="text-4xl font-bold mt-2">{stats.pending}</p>
+                            </div>
+                            <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+                                <FiClock className="h-6 w-6 text-white" />
+                            </div>
+                        </div>
+                        <div className="mt-4 text-yellow-100 text-xs flex items-center">
+                            Requires action
+                        </div>
+                    </div>
+                    <FiClock className="absolute -bottom-4 -right-4 h-32 w-32 text-white opacity-10 transform rotate-12" />
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
-                    <h3 className="text-gray-500 text-sm font-medium uppercase">Approved</h3>
-                    <p className="text-3xl font-bold text-gray-800 mt-2">{stats.approved}</p>
+
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-xl shadow-lg text-white relative overflow-hidden">
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h3 className="text-green-100 text-sm font-medium uppercase tracking-wider">Approved</h3>
+                                <p className="text-4xl font-bold mt-2">{stats.approved}</p>
+                            </div>
+                            <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+                                <FiCheckCircle className="h-6 w-6 text-white" />
+                            </div>
+                        </div>
+                        <div className="mt-4 text-green-100 text-xs flex items-center">
+                            Successfully processed
+                        </div>
+                    </div>
+                    <FiCheckCircle className="absolute -bottom-4 -right-4 h-32 w-32 text-white opacity-10 transform rotate-12" />
                 </div>
             </div>
 

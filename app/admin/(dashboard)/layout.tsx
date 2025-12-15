@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ReactNode, useState } from 'react';
+import { FiMenu, FiX, FiGrid, FiList, FiLogOut, FiLayout } from 'react-icons/fi';
 
 // This layout only applies to routes inside (dashboard) group
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -11,21 +12,24 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="flex h-screen bg-gray-100 relative">
             {/* Mobile Header */}
             <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 text-white flex items-center justify-between px-4 z-30 shadow-md">
-                <span className="font-bold text-xl">Admin Panel</span>
+                <div className="flex items-center space-x-2">
+                    <div className="bg-blue-600 p-1.5 rounded">
+                        <FiLayout className="h-5 w-5" />
+                    </div>
+                    <span className="font-bold text-xl tracking-tight">Admin Panel</span>
+                </div>
                 <button
                     onClick={() => setSidebarOpen(true)}
-                    className="p-2 rounded hover:bg-slate-800 focus:outline-none"
+                    className="p-2.5 rounded-lg hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-700"
                 >
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
+                    <FiMenu className="h-6 w-6" />
                 </button>
             </div>
 
             {/* Overlay */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden backdrop-blur-sm transition-opacity"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
@@ -35,39 +39,46 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-800 text-white transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
             >
-                <div className="p-4 text-center text-2xl font-bold bg-slate-900 shadow-md flex justify-between items-center md:block">
-                    <span>Admin Panel</span>
+                <div className="h-16 flex items-center justify-between px-6 bg-slate-900 shadow-md">
+                    <div className="flex items-center space-x-2">
+                        <div className="bg-blue-600 p-1.5 rounded md:block hidden">
+                            <FiLayout className="h-5 w-5" />
+                        </div>
+                        <span className="font-bold text-xl tracking-tight">Admin Panel</span>
+                    </div>
                     {/* Close button for mobile inside sidebar */}
-                    <button onClick={() => setSidebarOpen(false)} className="md:hidden">
-                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                    <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-400 hover:text-white transition-colors">
+                        <FiX className="h-6 w-6" />
                     </button>
                 </div>
+
                 <nav className="mt-6 flex-1 px-4 space-y-2">
                     <Link
                         href="/admin/dashboard"
-                        className="block py-2.5 px-4 rounded hover:bg-slate-700 transition"
+                        className="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-slate-700 hover:text-white transition-colors group"
                         onClick={() => setSidebarOpen(false)}
                     >
+                        <FiGrid className="mr-3 h-5 w-5 group-hover:text-blue-400 transition-colors" />
                         Dashboard
                     </Link>
                     <Link
                         href="/admin/applications"
-                        className="block py-2.5 px-4 rounded hover:bg-slate-700 transition"
+                        className="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-slate-700 hover:text-white transition-colors group"
                         onClick={() => setSidebarOpen(false)}
                     >
+                        <FiList className="mr-3 h-5 w-5 group-hover:text-amber-400 transition-colors" />
                         Applications
                     </Link>
                 </nav>
-                <div className="p-4 bg-slate-900">
+                <div className="p-4 bg-slate-900 border-t border-slate-700">
                     <button
                         onClick={() => {
                             // Determine logic for logout: e.g. clear cookie/localstorage
                             window.location.href = '/admin/login';
                         }}
-                        className="block w-full py-2 px-4 rounded bg-red-600 hover:bg-red-700 text-white text-center transition text-sm font-bold"
+                        className="flex items-center justify-center w-full py-2.5 px-4 rounded bg-red-600 hover:bg-red-700 text-white transition-colors shadow-lg shadow-red-900/20 text-sm font-medium"
                     >
+                        <FiLogOut className="mr-2 h-4 w-4" />
                         Logout
                     </button>
                 </div>
