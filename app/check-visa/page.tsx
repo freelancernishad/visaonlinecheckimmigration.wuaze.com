@@ -13,10 +13,25 @@ export default function CheckVisa() {
     const [passport, setPassport] = useState("");
 
     useEffect(() => {
-        // Play audio on load if possible (browsers might block autoplay)
+        const playAudio = () => {
+            if (audioRef.current) {
+                audioRef.current.play().catch(e => {
+                    console.log("Audio autoplay blocked", e);
+                });
+            }
+        };
+
+        // Try to play immediately
         if (audioRef.current) {
-            audioRef.current.play().catch(e => console.log("Audio autoplay blocked", e));
+            audioRef.current.play().catch(() => {
+                // If blocked, play on first interaction
+                document.addEventListener('click', playAudio, { once: true });
+            });
         }
+
+        return () => {
+            document.removeEventListener('click', playAudio);
+        };
     }, []);
 
     const handleSubmit = (e: React.FormEvent) => {
