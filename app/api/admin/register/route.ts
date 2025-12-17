@@ -2,16 +2,25 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/db';
 import Admin from '@/models/Admin';
+import SiteSettings from '@/models/SiteSettings';
 
 export async function POST(req: Request) {
     try {
+        await connectDB();
+
+        // Check if registration is allowed
+        const settings = await SiteSettings.findOne();
+        if (settings && !settings.adminRegistrationOpen) {
+            return NextResponse.json({ error: 'Admin registration is currently closed.' }, { status: 403 });
+        }
+
         const { username, password } = await req.json();
 
         if (!username || !password) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        await connectDB();
+
 
         // Check if admin already exists
         const existingAdmin = await Admin.findOne({ username });

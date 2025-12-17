@@ -27,6 +27,11 @@ export default function AdminLoginPage() {
             const data = await res.json();
 
             if (data.success) {
+                // Save admin info for profile management
+                if (data.admin) {
+                    localStorage.setItem('adminUser', JSON.stringify(data.admin));
+                }
+
                 // In a real app, middleware would check for cookie/token.
                 // For this simple version, we rely on the user successfully logging in.
                 router.push('/admin/dashboard');

@@ -13,6 +13,7 @@ export interface ISiteSettings extends Document {
     siteTitle: string;
     footerText: string;
     copyrightText: string;
+    adminRegistrationOpen: boolean;
 }
 
 const SiteSettingsSchema: Schema<ISiteSettings> = new Schema(
@@ -29,6 +30,7 @@ const SiteSettingsSchema: Schema<ISiteSettings> = new Schema(
         siteTitle: { type: String, default: 'E-VISA' },
         footerText: { type: String, default: '' },
         copyrightText: { type: String, default: '2024 VisaOnline. All right reserved.' },
+        adminRegistrationOpen: { type: Boolean, default: true },
     },
     { timestamps: true }
 );

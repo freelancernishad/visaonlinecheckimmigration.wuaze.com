@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PageHeader from "@/components/PageHeader";
@@ -10,6 +11,7 @@ export default function ApplicationPage() {
   const [documentPreviews, setDocumentPreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,11 +48,7 @@ export default function ApplicationPage() {
       const result = await response.json();
 
       if (result.success) {
-        setMessage({ type: 'success', text: 'Application submitted successfully!' });
-        // Reset form
-        (e.target as HTMLFormElement).reset();
-        setPhotoPreview(null);
-        setDocumentPreviews([]);
+        router.push('/application/success');
       } else {
         setMessage({ type: 'error', text: result.error || 'Submission failed.' });
       }

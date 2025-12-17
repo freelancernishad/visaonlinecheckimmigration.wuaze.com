@@ -37,7 +37,14 @@ export async function POST(req: Request) {
         // For this simple request, we'll just return success and let the client handle "auth" state (localStorage)
         // or we can set a simple cookie.
 
-        return NextResponse.json({ success: true, message: 'Login successful' });
+        return NextResponse.json({
+            success: true,
+            message: 'Login successful',
+            admin: {
+                id: admin._id,
+                username: admin.username
+            }
+        });
 
     } catch (error: any) {
         console.error('Login Error:', error);
