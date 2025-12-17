@@ -4,10 +4,10 @@ import connectDB from '@/lib/db';
 import Admin from '@/models/Admin';
 
 // Update Admin (Other user)
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         await connectDB();
-        const { id } = params;
+        const { id } = await params;
         const { username, password } = await req.json();
 
         const admin = await Admin.findById(id);
@@ -39,10 +39,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 // Delete Admin
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         await connectDB();
-        const { id } = params;
+        const { id } = await params;
 
         // Prevent deleting the last admin? (Optional safety check)
         // const count = await Admin.countDocuments();
