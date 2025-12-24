@@ -47,14 +47,16 @@ function VisaStatusContent() {
     const nextImage = (e?: React.MouseEvent) => {
         e?.stopPropagation();
         if (sliderIndex !== null && application?.documents) {
-            setSliderIndex((prev) => (prev !== null && prev < application.documents.length - 1 ? prev + 1 : 0));
+            const len = application.documents.length;
+            setSliderIndex((prev) => (prev !== null && prev < len - 1 ? prev + 1 : 0));
         }
     };
 
     const prevImage = (e?: React.MouseEvent) => {
         e?.stopPropagation();
         if (sliderIndex !== null && application?.documents) {
-            setSliderIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : application.documents.length - 1));
+            const len = application.documents.length;
+            setSliderIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : len - 1));
         }
     };
 
