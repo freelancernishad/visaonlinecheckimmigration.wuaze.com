@@ -1,14 +1,23 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { FiChevronLeft, FiChevronRight, FiX } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiX, FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FaSave } from "react-icons/fa";
 import toast from 'react-hot-toast';
+import ConfirmationToast from '@/components/ConfirmationToast';
 
 export default function ApplicationDetails() {
     const params = useParams();
     const id = params?.id as string;
+    const searchParams = useSearchParams();
+
+    // Edit State
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState<any>({});
+    const [saving, setSaving] = useState(false);
+
     const [application, setApplication] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
@@ -23,83 +32,75 @@ export default function ApplicationDetails() {
                 .then(data => {
                     if (data.success) {
                         setApplication(data.data);
+                        setFormData(data.data); // Initialize form data
+                        // Check if edit mode is requested via URL
+                        if (searchParams?.get('edit') === 'true') {
+                            setIsEditing(true);
+                        }
                     }
                     setLoading(false);
                 })
                 .catch(() => setLoading(false));
         }
-    }, [id]);
+    }, [id, searchParams]);
 
-
-    // Reusable Confirmation Toast Component
-    const ConfirmationToast = ({
-        message,
-        subMessage,
-        onConfirm,
-        confirmText = "Confirm",
-        confirmColor = "bg-blue-600 hover:bg-blue-700",
-        t
-    }: {
-        message: React.ReactNode,
-        subMessage?: React.ReactNode,
-        onConfirm: () => Promise<void>,
-        confirmText?: string,
-        confirmColor?: string,
-        t: any
-    }) => {
-        const [loading, setLoading] = useState(false);
-
-        const handleConfirm = async () => {
-            setLoading(true);
-            try {
-                await onConfirm();
-                toast.dismiss(t.id);
-            } catch (error) {
-                setLoading(false);
-                // Error handling is done inside onConfirm typically via toast.error, 
-                // but we can also handle it here if needed.
-            }
-        };
-
-        return (
-            <div className="flex flex-col gap-3 min-w-[350px] bg-white p-2">
-                <p className="font-medium text-gray-800 text-center text-lg">
-                    {message}
-                    {subMessage && (
-                        <>
-                            <br />
-                            <span className="text-base text-red-500 font-normal mt-1 block">
-                                {subMessage}
-                            </span>
-                        </>
-                    )}
-                </p>
-                <div className="flex justify-center gap-4 mt-2">
-                    <button
-                        onClick={() => toast.dismiss(t.id)}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg border border-gray-300 transition-colors"
-                        disabled={loading}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleConfirm}
-                        className={`px-4 py-2 text-sm font-medium text-white rounded-lg shadow-md transition-colors flex items-center gap-2 ${confirmColor} ${loading ? 'opacity-75 cursor-not-allowed' : ''}`}
-                        disabled={loading}
-                    >
-                        {loading && (
-                            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        )}
-                        {loading ? 'Processing...' : confirmText}
-                    </button>
-                </div>
-            </div>
-        );
+    // Handle Input Change
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev: any) => ({ ...prev, [name]: value }));
     };
 
+    // Helper to upload file
+    const handleFileUpload = async (file: File, toastId: string): Promise<string | null> => {
+        const uploadData = new FormData();
+        uploadData.append('file', file);
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: uploadData
+            });
+            const data = await res.json();
+            if (data.success) {
+                return data.url;
+            } else {
+                return null;
+            }
+        } catch (err) {
+            return null;
+        }
+    };
+
+    // Handle Update
+    const handleUpdate = async () => {
+        setSaving(true);
+        const loadingToast = toast.loading('Updating application...');
+
+        try {
+            const res = await fetch(`/api/application/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                setApplication(data.data);
+                setIsEditing(false);
+                toast.success('Application updated successfully', { id: loadingToast });
+                router.push(`/admin/applications/${id}`); // Remove query param
+            } else {
+                toast.error(data.error || 'Update failed', { id: loadingToast });
+            }
+        } catch (error) {
+            toast.error('Update failed', { id: loadingToast });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // ... (Existing ConfirmationToast and other functions)
+
+    // ... (Existing useEffects for keyboard nav etc)
     const updateStatus = async (status: string) => {
         toast((t) => (
             <ConfirmationToast
@@ -115,6 +116,7 @@ export default function ApplicationDetails() {
                         const data = await res.json();
                         if (data.success) {
                             setApplication(data.data);
+                            setFormData(data.data); // Keep form synced
                             toast.success('Status updated successfully');
                         } else {
                             toast.error('Failed to update status');
@@ -138,6 +140,7 @@ export default function ApplicationDetails() {
     };
 
     const deleteApplication = async () => {
+        // ... (existing delete logic)
         toast((t) => (
             <ConfirmationToast
                 t={t}
@@ -174,6 +177,8 @@ export default function ApplicationDetails() {
             }
         });
     };
+
+    // ... (Existing Helper Functions: allImages, handleNext, handlePrev)
 
     // Flatten all images into a single array for navigation
     const allImages = useMemo(() => {
@@ -214,8 +219,8 @@ export default function ApplicationDetails() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [selectedImageIndex, handleNext, handlePrev]);
 
-
     if (loading) {
+        // ... existing loading
         return (
             <div className="flex h-[80vh] items-center justify-center">
                 <svg className="animate-spin h-12 w-12 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -231,7 +236,7 @@ export default function ApplicationDetails() {
 
     return (
         <div>
-            {/* Navigable Lightbox Modal */}
+            {/* ... existing Lightbox ... */}
             {currentImage && (
                 <div
                     className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-95 backdrop-blur-sm p-4 animate-in fade-in duration-200"
@@ -281,14 +286,17 @@ export default function ApplicationDetails() {
             )}
 
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Application Details</h1>
+                <h1 className="text-2xl font-bold text-gray-800">
+                    {isEditing ? 'Edit Application' : 'Application Details'}
+                </h1>
                 <Link href="/admin/applications" className="text-blue-600 hover:underline">
                     ← Back to List
                 </Link>
             </div>
 
             <div className="bg-white rounded-lg shadow p-8">
-                <div className="flex justify-between items-start mb-8 border-b pb-6">
+                {/* Header Actions */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b pb-6 gap-4">
                     <div>
                         <h2 className="text-xl font-bold text-gray-900">{application.name}</h2>
                         <p className="text-gray-500">Submitted on {new Date(application.createdAt).toLocaleString()}</p>
@@ -301,141 +309,302 @@ export default function ApplicationDetails() {
                             </span>
                         </div>
                     </div>
-                    <div className="flex gap-2">
-                        {application.status !== 'approved' && (
+                    <div className="flex flex-wrap gap-2">
+                        {!isEditing && (
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
+                            >
+                                <FiEdit /> Edit Details
+                            </button> // Added Edit Button
+                        )}
+
+                        {isEditing && (
+                            <>
+                                <button
+                                    onClick={() => { setIsEditing(false); setFormData(application); }}
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                                    disabled={saving}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleUpdate}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2"
+                                    disabled={saving}
+                                >
+                                    {saving ? 'Saving...' : <><FaSave /> Save Changes</>}
+                                </button>
+                            </>
+                        )}
+
+                        {!isEditing && application.status !== 'approved' && (
                             <button onClick={() => updateStatus('approved')} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
                                 Approve
                             </button>
                         )}
-                        {application.status !== 'rejected' && (
+                        {!isEditing && application.status !== 'rejected' && (
                             <button onClick={() => updateStatus('rejected')} className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">
                                 Reject
                             </button>
                         )}
-                        <button onClick={deleteApplication} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                            Delete
-                        </button>
+                        {!isEditing && (
+                            <button onClick={deleteApplication} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                                Delete
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold border-b pb-2">Personal Information</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <span className="block text-sm text-gray-500">Father's Name</span>
-                                <span className="text-gray-900">{application.father_name}</span>
+                {isEditing ? (
+                    /* EDIT FORM */
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-semibold border-b pb-2">Personal Information</h3>
+
+                            <div className="grid grid-cols-1 gap-4">
+                                {/* Passport Photo Upload */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Passport Photo</label>
+                                    <div className="flex items-center gap-4">
+                                        {formData.photo && (
+                                            <div className="relative w-24 h-24 border rounded-lg overflow-hidden group">
+                                                <img src={formData.photo} alt="Passport Preview" className="w-full h-full object-cover" />
+                                                <button
+                                                    onClick={() => setFormData((prev: any) => ({ ...prev, photo: '' }))}
+                                                    className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <FiX />
+                                                </button>
+                                            </div>
+                                        )}
+                                        <div className="flex-1">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+
+                                                    const toastId = toast.loading('Uploading photo...');
+                                                    const url = await handleFileUpload(file, toastId);
+                                                    if (url) {
+                                                        setFormData((prev: any) => ({ ...prev, photo: url }));
+                                                        toast.success('Photo uploaded', { id: toastId });
+                                                    } else {
+                                                        toast.error('Upload failed', { id: toastId });
+                                                    }
+                                                }}
+                                                className="block w-full text-sm text-gray-500
+                                                    file:mr-4 file:py-2 file:px-4
+                                                    file:rounded-full file:border-0
+                                                    file:text-sm file:font-semibold
+                                                    file:bg-blue-50 file:text-blue-700
+                                                    hover:file:bg-blue-100"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                                    <input type="text" name="name" value={formData.name || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Father's Name</label>
+                                        <input type="text" name="father_name" value={formData.father_name || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Mother's Name</label>
+                                        <input type="text" name="mother_name" value={formData.mother_name || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                                    <input type="email" name="email" value={formData.email || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Phone</label>
+                                    <input type="text" name="phone" value={formData.phone || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">NID</label>
+                                        <input type="text" name="nid" value={formData.nid || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Passport Number</label>
+                                        <input type="text" name="passport" value={formData.passport || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Visa Type</label>
+                                    <select name="visa_type" value={formData.visa_type || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2">
+                                        <option value="student_visa">Student Visa</option>
+                                        <option value="job_visa">Job Visa</option>
+                                        <option value="tourist_visa">Tourist Visa</option>
+                                        <option value="business_visa">Business Visa</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div>
-                                <span className="block text-sm text-gray-500">Mother's Name</span>
-                                <span className="text-gray-900">{application.mother_name}</span>
-                            </div>
-                            <div>
-                                <span className="block text-sm text-gray-500">Email</span>
-                                <span className="text-gray-900">{application.email}</span>
-                            </div>
-                            <div>
-                                <span className="block text-sm text-gray-500">Phone</span>
-                                <span className="text-gray-900">{application.phone}</span>
-                            </div>
-                            <div>
-                                <span className="block text-sm text-gray-500">NID</span>
-                                <span className="text-gray-900">{application.nid}</span>
-                            </div>
-                            <div>
-                                <span className="block text-sm text-gray-500">Passport</span>
-                                <span className="text-gray-900">{application.passport || 'N/A'}</span>
-                            </div>
-                            <div>
-                                <span className="block text-sm text-gray-500">Visa Type</span>
-                                <span className="text-gray-900">{application.visa_type}</span>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-semibold border-b pb-2">Address & Job</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Current Address</label>
+                                    <textarea name="current_address" value={formData.current_address || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" rows={3}></textarea>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Permanent Address</label>
+                                    <textarea name="permanent_address" value={formData.permanent_address || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" rows={3}></textarea>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Job Name</label>
+                                        <input type="text" name="job_name" value={formData.job_name || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Job Category</label>
+                                        <input type="text" name="job_category" value={formData.job_category || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Experience</label>
+                                    <textarea name="experience" value={formData.experience || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" rows={4}></textarea>
+                                </div>
+
+
+                                {/* Documents Upload */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Supporting Documents</label>
+
+                                    {/* Existing Documents List */}
+                                    <div className="grid grid-cols-3 gap-2 mb-4">
+                                        {formData.documents?.map((doc: string, index: number) => (
+                                            <div key={index} className="relative group border rounded-lg overflow-hidden h-24 bg-gray-50 flex items-center justify-center">
+                                                <img src={doc} alt="Document" className="max-w-full max-h-full" />
+                                                <button
+                                                    onClick={() => setFormData((prev: any) => ({
+                                                        ...prev,
+                                                        documents: prev.documents.filter((_: any, i: number) => i !== index)
+                                                    }))}
+                                                    className="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <FiTrash2 size={24} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Add New Documents */}
+                                    <input
+                                        type="file"
+                                        multiple
+                                        onChange={async (e) => {
+                                            const files = Array.from(e.target.files || []);
+                                            if (files.length === 0) return;
+
+                                            const toastId = toast.loading(`Uploading ${files.length} documents...`);
+
+                                            try {
+                                                const newUrls: string[] = [];
+                                                for (const file of files) {
+                                                    const url = await handleFileUpload(file, toastId);
+                                                    if (url) {
+                                                        newUrls.push(url);
+                                                    }
+                                                }
+
+                                                if (newUrls.length > 0) {
+                                                    setFormData((prev: any) => ({
+                                                        ...prev,
+                                                        documents: [...(prev.documents || []), ...newUrls]
+                                                    }));
+                                                    toast.success('Documents uploaded', { id: toastId });
+                                                } else {
+                                                    toast.error('Upload failed', { id: toastId });
+                                                }
+                                            } catch (err) {
+                                                toast.error('Upload failed', { id: toastId });
+                                            }
+                                        }}
+                                        className="block w-full text-sm text-gray-500
+                                            file:mr-4 file:py-2 file:px-4
+                                            file:rounded-full file:border-0
+                                            file:text-sm file:font-semibold
+                                            file:bg-blue-50 file:text-blue-700
+                                            hover:file:bg-blue-100"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Select multiple files to add them to the list.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold border-b pb-2">Address & Job</h3>
-                        <div className="grid grid-cols-1 gap-4">
-                            <div>
-                                <span className="block text-sm text-gray-500">Current Address</span>
-                                <span className="text-gray-900">{application.current_address}</span>
+                ) : (
+                    /* VIEW MODE */
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold border-b pb-2">Personal Information</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><span className="block text-sm text-gray-500">Father's Name</span><span className="text-gray-900">{application.father_name}</span></div>
+                                    <div><span className="block text-sm text-gray-500">Mother's Name</span><span className="text-gray-900">{application.mother_name}</span></div>
+                                    <div><span className="block text-sm text-gray-500">Email</span><span className="text-gray-900">{application.email}</span></div>
+                                    <div><span className="block text-sm text-gray-500">Phone</span><span className="text-gray-900">{application.phone}</span></div>
+                                    <div><span className="block text-sm text-gray-500">NID</span><span className="text-gray-900">{application.nid}</span></div>
+                                    <div><span className="block text-sm text-gray-500">Passport</span><span className="text-gray-900">{application.passport || 'N/A'}</span></div>
+                                    <div><span className="block text-sm text-gray-500">Visa Type</span><span className="text-gray-900">{application.visa_type}</span></div>
+                                </div>
                             </div>
-                            <div>
-                                <span className="block text-sm text-gray-500">Permanent Address</span>
-                                <span className="text-gray-900">{application.permanent_address}</span>
-                            </div>
-                            <div>
-                                <span className="block text-sm text-gray-500">Job Name</span>
-                                <span className="text-gray-900">{application.job_name || 'N/A'}</span>
-                            </div>
-                            <div>
-                                <span className="block text-sm text-gray-500">Job Category</span>
-                                <span className="text-gray-900">{application.job_category || 'N/A'}</span>
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold border-b pb-2">Address & Job</h3>
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div><span className="block text-sm text-gray-500">Current Address</span><span className="text-gray-900">{application.current_address}</span></div>
+                                    <div><span className="block text-sm text-gray-500">Permanent Address</span><span className="text-gray-900">{application.permanent_address}</span></div>
+                                    <div><span className="block text-sm text-gray-500">Job Name</span><span className="text-gray-900">{application.job_name || 'N/A'}</span></div>
+                                    <div><span className="block text-sm text-gray-500">Job Category</span><span className="text-gray-900">{application.job_category || 'N/A'}</span></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div className="mt-8">
-                    <h3 className="text-lg font-semibold border-b pb-2 mb-4">Experience</h3>
-                    <p className="text-gray-700 whitespace-pre-wrap">{application.experience || 'No experience details provided.'}</p>
-                </div>
+                        <div className="mt-8">
+                            <h3 className="text-lg font-semibold border-b pb-2 mb-4">Experience</h3>
+                            <p className="text-gray-700 whitespace-pre-wrap">{application.experience || 'No experience details provided.'}</p>
+                        </div>
+                    </>
+                )}
 
                 <div className="mt-8">
                     <h3 className="text-lg font-semibold border-b pb-2 mb-4">Documents Gallery</h3>
-
+                    {/* ... (Existing gallery code) */}
                     <div className="mb-6">
                         <h4 className="font-medium text-gray-700 mb-2">Passport</h4>
                         {application.photo ? (
-                            <div
-                                className="inline-block border-4 border-white shadow-lg rounded-xl overflow-hidden cursor-pointer transform hover:scale-105 transition-transform duration-300 bg-gray-50"
-                                onClick={() => {
-                                    // Find index of passport photo
-                                    const idx = allImages.findIndex(img => img.src === application.photo);
-                                    if (idx !== -1) setSelectedImageIndex(idx);
-                                }}
-                            >
+                            <div className="inline-block border-4 border-white shadow-lg rounded-xl overflow-hidden cursor-pointer transform hover:scale-105 transition-transform duration-300 bg-gray-50" onClick={() => { const idx = allImages.findIndex(img => img.src === application.photo); if (idx !== -1) setSelectedImageIndex(idx); }}>
                                 <img src={application.photo} alt="Passport" className="max-w-xs h-auto block" />
                             </div>
-                        ) : (
-                            <p className="text-gray-500 italic">No passport photo uploaded.</p>
-                        )}
+                        ) : <p className="text-gray-500 italic">No passport photo uploaded.</p>}
                     </div>
-
                     <div>
                         <h4 className="font-medium text-gray-700 mb-4">Supporting Documents</h4>
                         {application.documents && application.documents.length > 0 ? (
                             <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4 mx-auto">
                                 {application.documents.map((doc: string, idx: number) => (
-                                    <div
-                                        key={idx}
-                                        className="break-inside-avoid relative group rounded-xl overflow-hidden border border-gray-100 shadow-md cursor-zoom-in bg-white"
-                                        onClick={() => {
-                                            // Find index of this document
-                                            // Note: using findIndex is safer than assuming offsets because the array order is static but safe
-                                            const globalIdx = allImages.findIndex(img => img.src === doc);
-                                            if (globalIdx !== -1) setSelectedImageIndex(globalIdx);
-                                        }}
-                                    >
-                                        <img
-                                            src={doc}
-                                            alt={`Document ${idx}`}
-                                            className="w-full h-auto block transform group-hover:scale-110 transition-transform duration-500 ease-out"
-                                        />
+                                    <div key={idx} className="break-inside-avoid relative group rounded-xl overflow-hidden border border-gray-100 shadow-md cursor-zoom-in bg-white" onClick={() => { const globalIdx = allImages.findIndex(img => img.src === doc); if (globalIdx !== -1) setSelectedImageIndex(globalIdx); }}>
+                                        <img src={doc} alt={`Document ${idx}`} className="w-full h-auto block transform group-hover:scale-110 transition-transform duration-500 ease-out" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-                                            <span className="text-white text-xs font-medium px-2 py-1 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
-                                                View Fullscreen
-                                            </span>
+                                            <span className="text-white text-xs font-medium px-2 py-1 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">View Fullscreen</span>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        ) : (
-                            <p className="text-gray-500 italic">No supporting documents uploaded.</p>
-                        )}
+                        ) : <p className="text-gray-500 italic">No supporting documents uploaded.</p>}
                     </div>
-                </div>
 
+                </div>
             </div>
         </div>
     );
