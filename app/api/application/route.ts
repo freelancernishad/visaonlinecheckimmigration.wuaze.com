@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
     try {
         await connectDB();
-        const applications = await Application.find({}).sort({ createdAt: -1 });
+        const applications = await Application.find({}).select('-photo -documents').sort({ createdAt: -1 });
 
         return NextResponse.json({ success: true, data: applications });
     } catch (error: any) {
