@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { FiPlus, FiTrash2, FiEdit2, FiX } from 'react-icons/fi';
+import ConfirmationToast from '@/components/ConfirmationToast';
 
 interface AdminUser {
     _id: string;

@@ -50,24 +50,14 @@ export default function ApplicationDetails() {
         setFormData((prev: any) => ({ ...prev, [name]: value }));
     };
 
-    // Helper to upload file
-    const handleFileUpload = async (file: File, toastId: string): Promise<string | null> => {
-        const uploadData = new FormData();
-        uploadData.append('file', file);
-        try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: uploadData
-            });
-            const data = await res.json();
-            if (data.success) {
-                return data.url;
-            } else {
-                return null;
-            }
-        } catch (err) {
-            return null;
-        }
+    // Helper to convert file to Base64
+    const convertFileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = (error) => reject(error);
+        });
     };
 
     // Handle Update
@@ -386,13 +376,11 @@ export default function ApplicationDetails() {
                                                     const file = e.target.files?.[0];
                                                     if (!file) return;
 
-                                                    const toastId = toast.loading('Uploading photo...');
-                                                    const url = await handleFileUpload(file, toastId);
-                                                    if (url) {
-                                                        setFormData((prev: any) => ({ ...prev, photo: url }));
-                                                        toast.success('Photo uploaded', { id: toastId });
-                                                    } else {
-                                                        toast.error('Upload failed', { id: toastId });
+                                                    try {
+                                                        const base64 = await convertFileToBase64(file);
+                                                        setFormData((prev: any) => ({ ...prev, photo: base64 }));
+                                                    } catch (err) {
+                                                        toast.error("Failed to convert image");
                                                     }
                                                 }}
                                                 className="block w-full text-sm text-gray-500
@@ -507,28 +495,22 @@ export default function ApplicationDetails() {
                                             const files = Array.from(e.target.files || []);
                                             if (files.length === 0) return;
 
-                                            const toastId = toast.loading(`Uploading ${files.length} documents...`);
+                                            const toastId = toast.loading(`Processing ${files.length} documents...`);
 
                                             try {
-                                                const newUrls: string[] = [];
+                                                const newBase64s: string[] = [];
                                                 for (const file of files) {
-                                                    const url = await handleFileUpload(file, toastId);
-                                                    if (url) {
-                                                        newUrls.push(url);
-                                                    }
+                                                    const base64 = await convertFileToBase64(file);
+                                                    newBase64s.push(base64);
                                                 }
 
-                                                if (newUrls.length > 0) {
-                                                    setFormData((prev: any) => ({
-                                                        ...prev,
-                                                        documents: [...(prev.documents || []), ...newUrls]
-                                                    }));
-                                                    toast.success('Documents uploaded', { id: toastId });
-                                                } else {
-                                                    toast.error('Upload failed', { id: toastId });
-                                                }
+                                                setFormData((prev: any) => ({
+                                                    ...prev,
+                                                    documents: [...(prev.documents || []), ...newBase64s]
+                                                }));
+                                                toast.success('Documents added', { id: toastId });
                                             } catch (err) {
-                                                toast.error('Upload failed', { id: toastId });
+                                                toast.error('Failed to process documents', { id: toastId });
                                             }
                                         }}
                                         className="block w-full text-sm text-gray-500
