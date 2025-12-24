@@ -102,6 +102,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         <FiLayout className="mr-3 h-5 w-5 group-hover:text-green-400 transition-colors" />
                         Home Page
                     </Link>
+                    <Link
+                        href="/admin/media"
+                        className="flex items-center px-4 py-3 text-gray-300 rounded-lg hover:bg-slate-700 hover:text-white transition-colors group"
+                        onClick={() => setSidebarOpen(false)}
+                    >
+                        <FiGrid className="mr-3 h-5 w-5 group-hover:text-orange-400 transition-colors" />
+                        Media Gallery
+                    </Link>
                 </nav>
                 <div className="p-4 bg-slate-900 border-t border-slate-700">
                     <button
