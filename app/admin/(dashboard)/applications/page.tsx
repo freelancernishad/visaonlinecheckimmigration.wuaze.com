@@ -27,10 +27,14 @@ import {
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import ConfirmationToast from '@/components/ConfirmationToast';
+import useSWR from 'swr';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function ApplicationsList() {
-    const [applications, setApplications] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: apiResponse, isLoading: loading, mutate } = useSWR('/api/application', fetcher);
+    const applications: any[] = apiResponse?.data || [];
+
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [menuPosition, setMenuPosition] = useState<'up' | 'down'>('down');
 
@@ -48,23 +52,6 @@ export default function ApplicationsList() {
     const itemsPerPage = 10;
 
     const menuRef = useRef<HTMLDivElement>(null);
-
-    const fetchApplications = () => {
-        setLoading(true);
-        fetch('/api/application')
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    setApplications(data.data);
-                }
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    };
-
-    useEffect(() => {
-        fetchApplications();
-    }, []);
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -161,6 +148,10 @@ export default function ApplicationsList() {
                 t={t}
                 message={<span>Are you sure you want to mark this as <span className="font-bold">{status}</span>?</span>}
                 onConfirm={async () => {
+                    // Optimistic Update
+                    const newApps = applications.map(app => app._id === id ? { ...app, status } : app);
+                    mutate({ success: true, data: newApps }, false);
+
                     try {
                         const res = await fetch(`/api/application/${id}`, {
                             method: 'PUT',
@@ -169,13 +160,15 @@ export default function ApplicationsList() {
                         });
                         const data = await res.json();
                         if (data.success) {
-                            setApplications(prev => prev.map(app => app._id === id ? { ...app, status } : app));
                             toast.success('Status updated successfully');
+                            mutate(); // Revalidate
                         } else {
                             toast.error('Failed to update status');
+                            mutate(); // Revert
                         }
                     } catch (err) {
                         toast.error('Failed to update status');
+                        mutate(); // Revert
                     }
                 }}
             />
@@ -202,19 +195,25 @@ export default function ApplicationsList() {
                 confirmText="Delete"
                 confirmColor="bg-red-600 hover:bg-red-700"
                 onConfirm={async () => {
+                    // Optimistic Update
+                    const newApps = applications.filter(app => app._id !== id);
+                    mutate({ success: true, data: newApps }, false);
+
                     try {
                         const res = await fetch(`/api/application/${id}`, {
                             method: 'DELETE',
                         });
                         const data = await res.json();
                         if (data.success) {
-                            setApplications(prev => prev.filter(app => app._id !== id));
                             toast.success('Application deleted');
+                            mutate(); // Revalidate
                         } else {
                             toast.error('Failed to delete');
+                            mutate(); // Revert
                         }
                     } catch (err) {
                         toast.error('Failed to delete');
+                        mutate(); // Revert
                     }
                 }}
             />

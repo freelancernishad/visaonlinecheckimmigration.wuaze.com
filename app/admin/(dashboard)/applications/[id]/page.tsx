@@ -7,42 +7,40 @@ import { FiChevronLeft, FiChevronRight, FiX, FiEdit, FiTrash2 } from 'react-icon
 import { FaSave } from "react-icons/fa";
 import toast from 'react-hot-toast';
 import ConfirmationToast from '@/components/ConfirmationToast';
+import useSWR from 'swr';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function ApplicationDetails() {
     const params = useParams();
     const id = params?.id as string;
     const searchParams = useSearchParams();
 
+    // Use SWR for fetching
+    const { data: apiResponse, isLoading: loading, mutate } = useSWR(id ? `/api/application/${id}` : null, fetcher);
+    const application = apiResponse?.success ? apiResponse.data : null;
+
     // Edit State
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState<any>({});
     const [saving, setSaving] = useState(false);
 
-    const [application, setApplication] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     // Lightbox State
     const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
+    // Sync formData when application data loads
     useEffect(() => {
-        if (id) {
-            fetch(`/api/application/${id}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        setApplication(data.data);
-                        setFormData(data.data); // Initialize form data
-                        // Check if edit mode is requested via URL
-                        if (searchParams?.get('edit') === 'true') {
-                            setIsEditing(true);
-                        }
-                    }
-                    setLoading(false);
-                })
-                .catch(() => setLoading(false));
+        if (application) {
+            setFormData(application);
+            if (searchParams?.get('edit') === 'true') {
+                setIsEditing(true);
+            }
         }
-    }, [id, searchParams]);
+    }, [application, searchParams]);
+
+    // Convert File to Base64 helper remains same...
 
     // Handle Input Change
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -74,7 +72,7 @@ export default function ApplicationDetails() {
             const data = await res.json();
 
             if (data.success) {
-                setApplication(data.data);
+                await mutate(); // Revalidate data
                 setIsEditing(false);
                 toast.success('Application updated successfully', { id: loadingToast });
                 router.push(`/admin/applications/${id}`); // Remove query param
@@ -90,13 +88,15 @@ export default function ApplicationDetails() {
 
     // ... (Existing ConfirmationToast and other functions)
 
-    // ... (Existing useEffects for keyboard nav etc)
     const updateStatus = async (status: string) => {
         toast((t) => (
             <ConfirmationToast
                 t={t}
                 message={<span>Are you sure you want to mark this as <span className="font-bold">{status}</span>?</span>}
                 onConfirm={async () => {
+                    // Optimistic update locally? 
+                    // For details view, simpler to just revalidate unless we want precise control.
+                    // Let's rely on revalidation for simplicity and safety, or use mutate with temp data.
                     try {
                         const res = await fetch(`/api/application/${id}`, {
                             method: 'PUT',
@@ -105,8 +105,9 @@ export default function ApplicationDetails() {
                         });
                         const data = await res.json();
                         if (data.success) {
-                            setApplication(data.data);
-                            setFormData(data.data); // Keep form synced
+                            await mutate(); // Revalidate
+                            // Also update form data if we are in view mode? 
+                            // Effect "useEffect [application]" will handle syncing formData if application changes.
                             toast.success('Status updated successfully');
                         } else {
                             toast.error('Failed to update status');
@@ -130,7 +131,6 @@ export default function ApplicationDetails() {
     };
 
     const deleteApplication = async () => {
-        // ... (existing delete logic)
         toast((t) => (
             <ConfirmationToast
                 t={t}
@@ -146,6 +146,7 @@ export default function ApplicationDetails() {
                         const data = await res.json();
                         if (data.success) {
                             toast.success('Application deleted');
+                            // Clear cache for this item? SWR usually handles it if we navigate away.
                             router.push('/admin/applications');
                         } else {
                             toast.error('Failed to delete');

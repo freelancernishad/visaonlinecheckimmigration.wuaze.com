@@ -17,15 +17,24 @@ export default function VisaStatus() {
 
 import { getVisaStatus } from "@/app/actions/visa";
 import { IApplication } from "@/models/Application";
+import useSWR from 'swr';
 
 function VisaStatusContent() {
     const searchParams = useSearchParams();
     const passport = searchParams.get("passport");
     const audioRef = useRef<HTMLAudioElement>(null);
-    const [application, setApplication] = useState<any | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
     const [sliderIndex, setSliderIndex] = useState<number | null>(null);
+
+    const { data: result, isLoading: loading } = useSWR(
+        passport ? ['visa-status', passport] : null,
+        ([_, p]) => getVisaStatus(p)
+    );
+
+    const application = result?.success ? result.data : null;
+    // Determine error: only if not loading, result exists, and success is false
+    const error = (!loading && result && !result.success)
+        ? (result.message || "Application not found")
+        : "";
 
     const openSlider = (index: number) => {
         setSliderIndex(index);
@@ -62,30 +71,6 @@ function VisaStatusContent() {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [sliderIndex, application]);
-
-    useEffect(() => {
-        const fetchStatus = async () => {
-            if (!passport) {
-                setLoading(false);
-                return;
-            }
-
-            try {
-                const result = await getVisaStatus(passport);
-                if (result.success) {
-                    setApplication(result.data);
-                } else {
-                    setError(result.message || "Application not found");
-                }
-            } catch (err) {
-                setError("Failed to fetch application data");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchStatus();
-    }, [passport]);
 
     useEffect(() => {
         // Only play audio if application is loaded and status is approved

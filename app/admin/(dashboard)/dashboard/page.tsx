@@ -8,29 +8,21 @@ import {
     PieChart, Pie, Cell, ResponsiveContainer,
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend
 } from 'recharts';
+import useSWR from 'swr';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function AdminDashboard() {
-    const [applications, setApplications] = useState<any[]>([]);
-    const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
-    const [loading, setLoading] = useState(true);
+    const { data: apiResponse, isLoading: loading } = useSWR('/api/application', fetcher);
+    const applications: any[] = apiResponse?.data || [];
 
-    useEffect(() => {
-        fetch('/api/application')
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && Array.isArray(data.data)) {
-                    const apps = data.data;
-                    setApplications(apps);
-                    setStats({
-                        total: apps.length,
-                        pending: apps.filter((a: any) => a.status === 'pending').length,
-                        approved: apps.filter((a: any) => a.status === 'approved').length,
-                    });
-                }
-            })
-            .catch(error => console.error('Error loading stats:', error))
-            .finally(() => setLoading(false));
-    }, []);
+    const stats = useMemo(() => {
+        return {
+            total: applications.length,
+            pending: applications.filter((a: any) => a.status === 'pending').length,
+            approved: applications.filter((a: any) => a.status === 'approved').length,
+        };
+    }, [applications]);
 
     // Prepare data for Status Distribution (Pie Chart)
     const statusData = useMemo(() => {

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { FiUpload, FiCopy, FiCheck, FiImage, FiTrash2, FiSearch } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import useSWR from 'swr';
 
 interface MediaFile {
     _id: string; // Database ID
@@ -10,42 +11,20 @@ interface MediaFile {
     name: string;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function MediaPage() {
-    const [files, setFiles] = useState<MediaFile[]>([]);
-    const [filteredFiles, setFilteredFiles] = useState<MediaFile[]>([]);
+    const { data, error, isLoading, mutate } = useSWR('/api/upload', fetcher);
+
     const [uploading, setUploading] = useState(false);
-    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        fetchFiles();
-    }, []);
+    const files: MediaFile[] = data?.files || [];
 
-    useEffect(() => {
-        if (searchTerm) {
-            setFilteredFiles(files.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase())));
-        } else {
-            setFilteredFiles(files);
-        }
+    const filteredFiles = useMemo(() => {
+        if (!searchTerm) return files;
+        return files.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
     }, [searchTerm, files]);
-
-    const fetchFiles = async () => {
-        try {
-            const res = await fetch('/api/upload');
-            const data = await res.json();
-            if (data.success) {
-                setFiles(data.files);
-                setFilteredFiles(data.files);
-            } else {
-                toast.error('Failed to fetch images');
-            }
-        } catch (error) {
-            console.error('Error fetching files:', error);
-            toast.error('Failed to load images');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || !e.target.files[0]) return;
@@ -66,8 +45,7 @@ export default function MediaPage() {
 
             if (data.success) {
                 toast.success('Image uploaded successfully', { id: loadingToast });
-                // Optimistically add to list or refetch
-                fetchFiles();
+                mutate(); // Refresh the list
             } else {
                 toast.error(data.error || 'Upload failed', { id: loadingToast });
             }
@@ -97,22 +75,30 @@ export default function MediaPage() {
         if (!confirm('Are you sure you want to delete this image?')) return;
 
         const loadingToast = toast.loading('Deleting...');
+        // Optimistic update: Remove locally immediately
+        mutate(
+            { ...data, files: files.filter(f => f._id !== id) },
+            false
+        );
+
         try {
             const res = await fetch('/api/upload', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id }),
             });
-            const data = await res.json();
+            const resData = await res.json();
 
-            if (data.success) {
+            if (resData.success) {
                 toast.success('Image deleted', { id: loadingToast });
-                setFiles(files.filter(f => f._id !== id));
+                mutate(); // Revalidate to be sure
             } else {
-                toast.error(data.error || 'Delete failed', { id: loadingToast });
+                toast.error(resData.error || 'Delete failed', { id: loadingToast });
+                mutate(); // Revert on error
             }
         } catch (error) {
             toast.error('Delete failed', { id: loadingToast });
+            mutate(); // Revert on error
         }
     };
 
@@ -198,7 +184,7 @@ export default function MediaPage() {
 
             {/* Gallery Grid */}
             <div className="min-h-[400px]">
-                {loading ? (
+                {isLoading ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-pulse">
                         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                             <div key={i} className="aspect-square bg-gray-200 rounded-xl"></div>
