@@ -14,7 +14,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         }
 
         // Return the binary data with correct content type
-        return new NextResponse(media.data as any, {
+        return new NextResponse(new Uint8Array(media.data), {
             headers: {
                 'Content-Type': media.contentType || 'application/octet-stream',
                 'Content-Disposition': `inline; filename="${media.filename}"`,
