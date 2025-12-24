@@ -426,6 +426,10 @@ export default function ApplicationDetails() {
                                         <label className="block text-sm font-medium text-gray-700">Passport Number</label>
                                         <input type="text" name="passport" value={formData.passport || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" />
                                     </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Visa For</label>
+                                        <input type="text" name="visa_for" value={formData.visa_for || ''} onChange={handleInputChange} className="mt-1 w-full border rounded-md p-2" />
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Visa Type</label>
@@ -539,6 +543,7 @@ export default function ApplicationDetails() {
                                     <div><span className="block text-sm text-gray-500">Phone</span><span className="text-gray-900">{application.phone}</span></div>
                                     <div><span className="block text-sm text-gray-500">NID</span><span className="text-gray-900">{application.nid}</span></div>
                                     <div><span className="block text-sm text-gray-500">Passport</span><span className="text-gray-900">{application.passport || 'N/A'}</span></div>
+                                    <div><span className="block text-sm text-gray-500">Visa For</span><span className="text-gray-900">{application.visa_for || 'N/A'}</span></div>
                                     <div><span className="block text-sm text-gray-500">Visa Type</span><span className="text-gray-900">{application.visa_type}</span></div>
                                 </div>
                             </div>

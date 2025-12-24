@@ -155,6 +155,14 @@ export default function ApplicationPage() {
                 <input type="text" id="passport" name="passport" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" />
               </div>
               <div>
+                <label htmlFor="visaFor" className="block text-gray-700 font-medium mb-2">Visa For</label>
+                <input type="text" id="visaFor" name="visa_for" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" />
+              </div>
+            </div>
+
+            {/* Row 5 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
                 <label htmlFor="visaType" className="block text-gray-700 font-medium mb-2">Visa Type</label>
                 <select id="visaType" name="visa_type" defaultValue="job_visa" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500 bg-white">
                   <option value="job_visa">Job Visa</option>
@@ -165,26 +173,26 @@ export default function ApplicationPage() {
                   <option value="tourist_visa" disabled>Tourist Visa</option>
                 </select>
               </div>
-            </div>
-
-            {/* Row 5 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="currentAddress" className="block text-gray-700 font-medium mb-2">Current Address</label>
                 <input type="text" id="currentAddress" name="current_address" required className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" />
-              </div>
-              <div>
-                <label htmlFor="permanentAddress" className="block text-gray-700 font-medium mb-2">Permanent Address</label>
-                <input type="text" id="permanentAddress" name="permanent_address" required className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" />
               </div>
             </div>
 
             {/* Row 6 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
+                <label htmlFor="permanentAddress" className="block text-gray-700 font-medium mb-2">Permanent Address</label>
+                <input type="text" id="permanentAddress" name="permanent_address" required className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" />
+              </div>
+              <div>
                 <label htmlFor="jobName" className="block text-gray-700 font-medium mb-2">Job Name</label>
                 <input type="text" id="jobName" name="job_name" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" />
               </div>
+            </div>
+
+            {/* Row 7 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="jobCategory" className="block text-gray-700 font-medium mb-2">Job Category</label>
                 <input type="text" id="jobCategory" name="job_category" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-red-500" />

@@ -29,6 +29,7 @@ export async function PUT(
         await connectDB();
         const { id } = await params;
         const body = await req.json();
+        console.log("PUT Application Body:", body);
 
         const application = await Application.findByIdAndUpdate(id, body, {
             new: true,

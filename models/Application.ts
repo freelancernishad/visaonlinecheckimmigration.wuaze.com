@@ -8,6 +8,7 @@ export interface IApplication extends Document {
     phone: string;
     nid: string;
     passport?: string;
+    visa_for?: string;
     visa_type: string;
     current_address: string;
     permanent_address: string;
@@ -30,6 +31,7 @@ const ApplicationSchema: Schema<IApplication> = new Schema(
         phone: { type: String, required: true },
         nid: { type: String, required: true },
         passport: { type: String },
+        visa_for: { type: String },
         visa_type: { type: String, required: true, default: 'job_visa' },
         current_address: { type: String, required: true },
         permanent_address: { type: String, required: true },
@@ -44,6 +46,7 @@ const ApplicationSchema: Schema<IApplication> = new Schema(
 );
 
 // Prevent overwrite model error in development
+if (process.env.NODE_ENV !== 'production') delete mongoose.models.Application;
 const Application: Model<IApplication> = mongoose.models.Application || mongoose.model<IApplication>('Application', ApplicationSchema);
 
 export default Application;
