@@ -5,6 +5,7 @@ import { useEffect, useRef, Suspense, useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { FaTimes, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 export default function VisaStatus() {
     return (
@@ -24,6 +25,43 @@ function VisaStatusContent() {
     const [application, setApplication] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [sliderIndex, setSliderIndex] = useState<number | null>(null);
+
+    const openSlider = (index: number) => {
+        setSliderIndex(index);
+    };
+
+    const closeSlider = () => {
+        setSliderIndex(null);
+    };
+
+    const nextImage = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (sliderIndex !== null && application?.documents) {
+            setSliderIndex((prev) => (prev !== null && prev < application.documents.length - 1 ? prev + 1 : 0));
+        }
+    };
+
+    const prevImage = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (sliderIndex !== null && application?.documents) {
+            setSliderIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : application.documents.length - 1));
+        }
+    };
+
+    // Handle keyboard navigation
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (sliderIndex === null) return;
+
+            if (e.key === 'ArrowRight') nextImage();
+            if (e.key === 'ArrowLeft') prevImage();
+            if (e.key === 'Escape') closeSlider();
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [sliderIndex, application]);
 
     useEffect(() => {
         const fetchStatus = async () => {
@@ -239,9 +277,14 @@ function VisaStatusContent() {
                 .document-image {
                     border-radius: 8px;
                     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-                    max-height: 300px;
+                    max-height: 400px;
                     object-fit: contain;
                     width: 100%;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                }
+                .document-image:hover {
+                    transform: scale(1.02);
                 }
                 
                 .action-btn {
@@ -409,12 +452,22 @@ function VisaStatusContent() {
                             <i className="fas fa-file-alt"></i> Your Important Files
                         </div>
                         <div className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                 {application.documents.map((doc: string, index: number) => (
-                                    <div key={index} className="p-2 bg-white rounded border border-gray-100">
-                                        <div className="document-image bg-gray-100 h-48 flex items-center justify-center text-gray-400 overflow-hidden relative">
-                                            <img src={doc} alt={`Document ${index + 1}`} className="w-full h-full object-contain" />
+                                    <div
+                                        key={index}
+                                        className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+                                        onClick={() => openSlider(index)}
+                                    >
+                                        <div className="bg-gray-50 h-80 flex items-center justify-center text-gray-400 overflow-hidden relative rounded-lg">
+                                            <img src={doc} alt={`Document ${index + 1}`} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <div className="bg-white/90 p-3 rounded-full text-gray-800 shadow-lg">
+                                                    <i className="fas fa-search-plus text-xl"></i>
+                                                </div>
+                                            </div>
                                         </div>
+                                        <p className="text-center mt-3 font-medium text-gray-500">Document {index + 1}</p>
                                     </div>
                                 ))}
                             </div>
@@ -428,6 +481,52 @@ function VisaStatusContent() {
                     </div>
                 )}
             </div>
+
+            {/* Add imports for FaTimes, FaChevronLeft, FaChevronRight from 'react-icons/fa'. */}
+            import {FaTimes, FaChevronLeft, FaChevronRight} from "react-icons/fa";
+
+            {/* Image Slider Modal */}
+            {sliderIndex !== null && application?.documents && (
+                <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center backdrop-blur-sm" onClick={closeSlider}>
+                    {/* Close Button */}
+                    <button
+                        onClick={closeSlider}
+                        className="absolute top-4 right-4 text-white/70 hover:text-white z-50 p-2 transition-colors"
+                    >
+                        <FaTimes className="text-4xl" />
+                    </button>
+
+                    {/* Navigation Buttons */}
+                    <button
+                        onClick={prevImage}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4 transition-colors z-50"
+                    >
+                        <FaChevronLeft className="text-3xl md:text-5xl" />
+                    </button>
+
+                    <button
+                        onClick={nextImage}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4 transition-colors z-50"
+                    >
+                        <FaChevronRight className="text-3xl md:text-5xl" />
+                    </button>
+
+                    {/* Image Container */}
+                    <div className="w-full h-full p-4 md:p-12 flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="relative max-w-full max-h-full">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={application.documents[sliderIndex]}
+                                alt={`Document ${sliderIndex + 1}`}
+                                className="max-w-full max-h-[85vh] object-contain shadow-2xl rounded-lg"
+                            />
+                        </div>
+                        <div className="mt-4 text-white/80 font-medium">
+                            {sliderIndex + 1} / {application.documents.length}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Footer />
         </div>
