@@ -93,6 +93,29 @@ export default function MediaPage() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this image?')) return;
+
+        const loadingToast = toast.loading('Deleting...');
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                toast.success('Image deleted', { id: loadingToast });
+                setFiles(files.filter(f => f._id !== id));
+            } else {
+                toast.error(data.error || 'Delete failed', { id: loadingToast });
+            }
+        } catch (error) {
+            toast.error('Delete failed', { id: loadingToast });
+        }
+    };
+
     const fallbackCopy = (text: string) => {
         const textArea = document.createElement("textarea");
         textArea.value = text;
@@ -210,6 +233,13 @@ export default function MediaPage() {
                                             title="Copy URL"
                                         >
                                             <FiCopy className="mr-2" /> Copy
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(file._id)}
+                                            className="transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-75 bg-red-500/90 hover:bg-red-600 text-white px-3 py-2 rounded-lg font-medium shadow-lg flex items-center backdrop-blur-sm"
+                                            title="Delete"
+                                        >
+                                            <FiTrash2 />
                                         </button>
                                     </div>
                                 </div>

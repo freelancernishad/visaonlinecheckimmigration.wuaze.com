@@ -60,3 +60,24 @@ export async function GET(req: Request) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
+export async function DELETE(req: Request) {
+    try {
+        await connectDB();
+        const { id } = await req.json();
+
+        if (!id) {
+            return NextResponse.json({ success: false, error: 'Media ID is required' }, { status: 400 });
+        }
+
+        const deletedMedia = await Media.findByIdAndDelete(id);
+
+        if (!deletedMedia) {
+            return NextResponse.json({ success: false, error: 'Media not found' }, { status: 404 });
+        }
+
+        return NextResponse.json({ success: true, message: 'Media deleted successfully' });
+    } catch (error: any) {
+        console.error('Delete Error:', error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+}
