@@ -482,8 +482,7 @@ function VisaStatusContent() {
                 )}
             </div>
 
-            {/* Add imports for FaTimes, FaChevronLeft, FaChevronRight from 'react-icons/fa'. */}
-            import {FaTimes, FaChevronLeft, FaChevronRight} from "react-icons/fa";
+
 
             {/* Image Slider Modal */}
             {sliderIndex !== null && application?.documents && (
