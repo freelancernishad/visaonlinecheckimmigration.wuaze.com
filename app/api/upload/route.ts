@@ -16,15 +16,16 @@ export async function POST(req: Request) {
         const filename = Date.now() + '_' + file.name.replace(/\s/g, '_');
 
         // Save to Database with binary data
-        const newMedia = await Media.create({
-            url: '', // Will update after ID is generated
+        const newMedia = new Media({
+            url: 'temp', // Temporary placeholder specifically to pass initial validation if synchronous, but we set it correctly below before save
             filename: filename,
             data: buffer,
             contentType: file.type
         });
 
-        // Set the URL to the serve endpoint
+        // Set the URL to the serve endpoint properly using the generated _id
         newMedia.url = `/api/file/${newMedia._id}`;
+
         await newMedia.save();
 
         return NextResponse.json({
